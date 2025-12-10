@@ -1,183 +1,56 @@
-// import React, { useEffect, useState } from 'react'
-// import axios from 'axios'
-// import Navbar from '../../../fragments/Navbar/Navbar'
-
-// export default function BookCardList() {
-//   const [books, setBooks] = useState([])
-//   const [error, setError] = useState('')
-
-//   useEffect(() => {
-//     const fetchBooks = async () => {
-//       try {
-//         setError('')
-//         const response = await axios.get('http://localhost:9000/books/all') // Запит до сервера для отримання каталогу
-//         setBooks(response.data)
-//       } catch (err) {
-//         setError('Failed to load books. Please try again.')
-//       }
-//     }
-
-//     fetchBooks()
-//   }, [])
-
-//   return (
-//     <>
-//       <Navbar />
-//       <div className="container mt-5">
-//         <h1 className="text-center mb-4">Book Catalog</h1>
-//         {error && <div className="alert alert-danger">{error}</div>}
-//         {books.length > 0 ? (
-//           <div className="row">
-//             {books.map((book, index) => (
-//               <div key={index} className="col-md-4 mb-4">
-//                 <div className="card h-100">
-//                   {/* Зображення книги */}
-//                   <div className="image-container">
-//                     {book.image ? (
-//                       <img
-//                         src={book.image}
-//                         className="card-img-top img-fluid"
-//                         alt={book.title}
-//                         style={{
-//                           objectFit: 'contain', // Масштабування без обрізання
-//                           maxHeight: '200px', // Максимальна висота
-//                           width: '100%', // Ширина 100%
-//                         }}
-//                       />
-//                     ) : (
-//                       <img
-//                         src="https://via.placeholder.com/200"
-//                         className="card-img-top img-fluid"
-//                         alt="default"
-//                         style={{
-//                           objectFit: 'contain',
-//                           maxHeight: '200px',
-//                           width: '100%',
-//                         }}
-//                       />
-//                     )}
-//                   </div>
-//                   <div className="card-body">
-//                     <a className="card-title" href={`/books/${book.id}`}>
-//                       {book.title}
-//                     </a>
-//                     <p className="card-text">
-//                       <strong>Authors:</strong> {book.authors || 'Unknown'}
-//                     </p>
-//                     <p className="card-text">
-//                       {book.description || 'No description available.'}
-//                     </p>
-//                   </div>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         ) : (
-//           <p className="text-center">No books found in the catalog.</p>
-//         )}
-//       </div>
-//     </>
-//   )
-// }
-
 import React, { useEffect, useState } from 'react'
 import Navbar from '../../../fragments/Navbar/Navbar'
 import Footer from '../../../fragments/Footer/Footer'
 
 export default function BookCardList() {
   const [books, setBooks] = useState([])
-  const [filteredBooks, setFilteredBooks] = useState([])
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [genre, setGenre] = useState('All Genres')
   const [sortOption, setSortOption] = useState('Title')
+  const [categories, setCategories] = useState([])
 
-  const mockBooks = [
-    {
-      id: 1,
-      title: 'Atomic Habits',
-      authors: 'James Clear',
-      description:
-        'Transform your life through the power of small, consistent changes.',
-      image:
-        'https://m.media-amazon.com/images/I/81kg51XRc1L._AC_UF1000,1000_QL80_.jpg',
-      // price: '₹203.00',
-      rating: 4.6,
-      genre: 'Self-help',
-    },
-    {
-      id: 2,
-      title: 'Beyond the Stars',
-      authors: 'Michael Chen',
-      description:
-        'An epic space odyssey that challenges our understanding of existence.',
-      image:
-        'https://images-na.ssl-images-amazon.com/images/I/71tbalAHYCL.jpg',
-      // price: '₹209.00',
-      rating: 4.3,
-      genre: 'Sci-fi',
-    },
-    {
-      id: 3,
-      title: 'Darkness Gathers',
-      authors: 'Emma Elliot',
-      description:
-        'A turbulent story of passion and revenge on the Yorkshire moors.',
-      image:
-        'https://images-na.ssl-images-amazon.com/images/I/81eB+7+CkUL.jpg',
-      // price: '₹325.00',
-      rating: null,
-      genre: 'Drama',
-    },
-    {
-      id: 4,
-      title: 'Digital Fortress',
-      authors: 'James Cooper',
-      description:
-        'In the age of digital warfare, no secret is safe from discovery.',
-      image:
-        'https://images-na.ssl-images-amazon.com/images/I/71rOzy4cyAL.jpg',
-      // price: '₹190.00',
-      rating: 4.2,
-      genre: 'Thriller',
-    },
-  ]
+  // Пагінація
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const limit = 12
 
+  // Завантаження категорій
   useEffect(() => {
-    setTimeout(() => {
-      setBooks(mockBooks)
-      setFilteredBooks(mockBooks)
-    }, 300)
+    fetch('http://localhost:8000/categories')
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((err) => console.error('Error fetching categories:', err))
   }, [])
 
+  // Завантаження книг з пагінацією
   useEffect(() => {
-    let results = books.filter(
-      (book) =>
-        (genre === 'All Genres' || book.genre === genre) &&
-        (book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          book.authors.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          book.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    const params = new URLSearchParams({
+      page,
+      limit,
+      search: searchTerm || '',
+      genre: genre !== 'All Genres' ? genre : '',
+      sort_by: sortOption,
+    })
 
-    if (sortOption === 'Title') {
-      results.sort((a, b) => a.title.localeCompare(b.title))
-    } else if (sortOption === 'Rating') {
-      results.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    }
+    fetch(`http://localhost:8000/books?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data.books)
 
-    setFilteredBooks(results)
-  }, [searchTerm, genre, sortOption, books])
+        setBooks(data.books)
+        setTotalPages(data.pages)
+      })
+      .catch((err) => console.log(err))
+  }, [searchTerm, genre, sortOption, page])
 
   return (
     <>
       <Navbar />
       <div
         className="container-fluid py-5"
-        style={{
-          backgroundColor: '#f6fbfc',
-          minHeight: '100vh',
-        }}
+        style={{ backgroundColor: '#f6fbfc', minHeight: '100vh' }}
       >
-        {/* Заголовок */}
         <h1
           className="text-center fw-bold mb-3"
           style={{ color: '#0a5c91', fontSize: '2.5rem' }}
@@ -232,10 +105,9 @@ export default function BookCardList() {
               }}
             >
               <option>All Genres</option>
-              <option>Self-help</option>
-              <option>Sci-fi</option>
-              <option>Drama</option>
-              <option>Thriller</option>
+              {categories.map((cat) => (
+                <option key={cat.id}>{cat.name}</option>
+              ))}
             </select>
 
             <select
@@ -258,10 +130,16 @@ export default function BookCardList() {
 
         {/* Картки книг */}
         <div className="container">
-          {filteredBooks.length > 0 ? (
-            <div className="row justify-content-center" style={{ rowGap: '30px' }}>
-              {filteredBooks.map((book) => (
-                <div key={book.id} className="col-sm-6 col-md-4 col-lg-3 d-flex">
+          {books.length > 0 ? (
+            <div
+              className="row justify-content-center"
+              style={{ rowGap: '30px' }}
+            >
+              {books.map((book) => (
+                <div
+                  key={book.id}
+                  className="col-sm-6 col-md-4 col-lg-3 d-flex"
+                >
                   <div
                     className="card flex-fill border-0 shadow-sm rounded-4 overflow-hidden"
                     style={{
@@ -291,7 +169,7 @@ export default function BookCardList() {
                       }}
                     >
                       <img
-                        src={book.image}
+                        src={book.image_url || book.image}
                         alt={book.title}
                         className="img-fluid"
                         style={{
@@ -317,15 +195,14 @@ export default function BookCardList() {
                       </p>
                       <p
                         className="text-secondary mb-2"
-                        style={{
-                          fontSize: '0.9rem',
-                          flexGrow: 1,
-                        }}
+                        style={{ fontSize: '0.9rem', flexGrow: 1 }}
                       >
-                        {book.description}
+                        {' '}
+                        {book.description.length > 100
+                          ? book.description.substring(0, 100) + '…'
+                          : book.description}
                       </p>
 
-                      {/* Рейтинг */}
                       {book.rating ? (
                         <p
                           style={{
@@ -342,16 +219,7 @@ export default function BookCardList() {
                         </p>
                       )}
 
-                      <div className="mt-auto d-flex justify-content-between align-items-center">
-                        {/* <span
-                          style={{
-                            color: '#0047ab',
-                            fontWeight: '600',
-                            fontSize: '1rem',
-                          }}
-                        >
-                          {book.price}
-                        </span> */}
+                      <div className="mt-auto d-flex justify-content-center align-items-center">
                         <a
                           href={`/books/${book.id}`}
                           className="btn btn-sm rounded-pill text-white"
@@ -379,6 +247,27 @@ export default function BookCardList() {
           ) : (
             <p className="text-center text-muted">No books found.</p>
           )}
+
+          {/* Пагінація */}
+          <div className="d-flex justify-content-center gap-2 mt-4">
+            <button
+              className="btn btn-outline-primary"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Prev
+            </button>
+            <span className="align-self-center">
+              {page} / {totalPages}
+            </span>
+            <button
+              className="btn btn-outline-primary"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 

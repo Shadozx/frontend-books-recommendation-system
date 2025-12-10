@@ -4,6 +4,7 @@ import {
   Router,
   Routes,
   useParams,
+  Navigate
 } from 'react-router-dom'
 import BookSearch from '../pages/books/BookSearch/BookSearch'
 import BookCardList from '../pages/books/BookCardsList/BookCardsList'
@@ -17,6 +18,7 @@ export default function BookRoutes() {
       <Route path="/search" element={<BookSearch />}></Route>
       <Route path="/catalog" element={<BookCardList />}></Route>
       <Route path="/:id" element={<BookInfo />}></Route>
+      <Route path="*" element={<Navigate to="/not-found" replace />} />
     </Routes>
   )
 }

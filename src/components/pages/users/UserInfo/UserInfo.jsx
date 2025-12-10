@@ -121,70 +121,67 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../fragments/Navbar/Navbar'
 import Footer from '../../../fragments/Footer/Footer'
-
+import { useParams } from 'react-router-dom'
+import { useAuthUser } from '../../../hooks/useAuthUser'
 
 export default function UserInfo() {
-  const [user] = useState({
-    id: 1,
-    nickname: 'BookLover123',
-    joinDate: '2025-01-02',
-    totalReviews: 3,
-    avgRating: 4.6,
-  })
+  const id = useParams().id
 
-  const [reviews] = useState([
-    {
-      id: 101,
-      title: 'Atomic Habits',
-      summary: 'Life-changing book about building habits.',
-      score: 5,
-      helpfulness: '10/12',
-      text: 'This book completely changed how I think about progress and motivation. The examples are simple but powerful.',
-      time: '2025-04-18',
-      // price: '₹203.00',
-    },
-    {
-      id: 102,
-      title: 'Deep Work',
-      summary: 'Essential for productivity.',
-      score: 4,
-      helpfulness: '7/9',
-      text: 'Very insightful. Makes you rethink how distractions impact real focus.',
-      time: '2025-07-02',
-      // price: '₹250.00',
-    },
-    {
-      id: 103,
-      title: 'Can’t Hurt Me',
-      summary: 'Intense but motivating.',
-      score: 5,
-      helpfulness: '5/6',
-      text: 'Raw, honest, and truly inspiring. David Goggins’ mindset is on another level.',
-      time: '2025-01-10',
-      // price: '₹310.00',
-    },
-  ])
+  const authUser = useAuthUser()
 
-  const [recommendations] = useState([
-    {
-      id: 201,
-      title: 'The Power of Now',
-      authors: 'Eckhart Tolle',
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd-2pAOkmRdvWof-zrJaf5-soLTsO-cHQ_BQ&s',
-    },
-    {
-      id: 202,
-      title: 'Mindset: The New Psychology of Success',
-      authors: 'Carol S. Dweck',
-      image: 'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTVnIJrWYK2L4BfRQ1m-xVXxD6akSvt-PRe8TdU_79ZBfbwVU8m',
-    },
-    {
-      id: 203,
-      title: 'The Subtle Art of Not Giving a F*ck',
-      authors: 'Mark Manson',
-      image: 'https://images-na.ssl-images-amazon.com/images/I/71QKQ9mwV7L.jpg',
-    },
-  ])
+  const [user, setUser] = useState(null)
+
+  const [reviews, setReviews] = useState([])
+
+  const [recommendations, setRecommendations] = useState([])
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const res = await fetch(`http://localhost:8000/users/${id}`)
+
+      if (!res.ok) throw new Error('User is not found')
+
+      const userData = await res.json()
+      setUser(userData)
+    }
+
+    fetchUser()
+  }, [id, authUser])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      console.log(id, authUser)
+
+      const res = await fetch(`http://localhost:8000/reviews/user/${id}`)
+
+      if (!res.ok) throw new Error('User is not found')
+
+      setReviews(await res.json())
+    }
+
+    fetchReviews()
+  }, [user, authUser])
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      console.log(id, authUser)
+
+      if (!recommendations || recommendations?.length == 0) {
+        const res = await fetch(
+          `http://localhost:8000/recommendations/common/${id}?current_user_id=${authUser.id}`
+        )
+
+        if (!res.ok) throw new Error('User is not found')
+
+        const recData = await res.json()
+        console.log(recData)
+
+        setRecommendations(recData.books)
+      }
+    }
+
+    fetchRecommendations()
+  }, [reviews, authUser, user])
 
   return (
     <>
@@ -225,7 +222,7 @@ export default function UserInfo() {
                   fontWeight: 'bold',
                 }}
               >
-                {user.nickname.charAt(0).toUpperCase()}
+                {user?.username.charAt(0).toUpperCase()}
               </div>
             </div>
 
@@ -234,15 +231,15 @@ export default function UserInfo() {
                 className="fw-semibold mb-2"
                 style={{ color: '#003d73', fontSize: '1.8rem' }}
               >
-                {user.nickname}
+                {user?.username}
               </h2>
-              <p style={{ color: '#0a5c91', fontSize: '1.1rem' }}>
+              {/* <p style={{ color: '#0a5c91', fontSize: '1.1rem' }}>
                 Joined on: {user.joinDate}
-              </p>
+              </p> */}
               <p style={{ color: '#0a5c91', fontSize: '1rem' }}>
-                Total Reviews: {user.totalReviews}
+                Total Reviews: {reviews.length}
               </p>
-              <p
+              {/* <p
                 style={{
                   color: '#ffb400',
                   fontWeight: '500',
@@ -250,7 +247,7 @@ export default function UserInfo() {
                 }}
               >
                 ⭐ Average Rating: {user.avgRating}/5
-              </p>
+              </p> */}
             </div>
           </div>
         </div>
@@ -264,7 +261,7 @@ export default function UserInfo() {
             User Reviews
           </h3>
 
-          {reviews.length > 0 ? (
+          {reviews?.length > 0 ? (
             <div className="row g-4">
               {reviews.map((review) => (
                 <div key={review.id} className="col-md-6">
@@ -309,7 +306,7 @@ export default function UserInfo() {
                       >
                         ⭐ {review.score}/5
                       </p>
-                      <p
+                      {/* <p
                         style={{
                           color: '#0a5c91',
                           fontSize: '0.9rem',
@@ -317,7 +314,7 @@ export default function UserInfo() {
                         }}
                       >
                         Helpfulness: {review.helpfulness}
-                      </p>
+                      </p> */}
                       <p
                         style={{
                           color: '#0a5c91',

@@ -4,10 +4,9 @@ import {
   Router,
   Routes,
   useParams,
+  Navigate
 } from 'react-router-dom'
-import BookSearch from '../pages/books/BookSearch/BookSearch'
-import BookCardList from '../pages/books/BookCardsList/BookCardsList'
-import BookInfo from '../pages/books/BookInfo/BookInfo'
+
 import Login from '../pages/auth/Login/Login'
 import Registration from '../pages/auth/Registration/Registration'
 
@@ -18,6 +17,8 @@ export default function AuthRoutes() {
     <Routes>
       <Route path="/registration" element={<Registration />}></Route>
       <Route path="/login" element={<Login />}></Route>
+
+      <Route path="*" element={<Navigate to="/not-found" replace />} />
     </Routes>
   )
 }

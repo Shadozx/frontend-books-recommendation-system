@@ -9,6 +9,7 @@ import BookRoutes from './components/routes/BookRoutes'
 import UserRoutes from './components/routes/UserRoutes'
 import AuthRoutes from './components/routes/AuthRoutes'
 import HomeRoutes from './components/routes/HomeRoutes'
+import NotFound from './components/pages/NotFound/NotFound'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -22,7 +23,11 @@ function App() {
           <Route path="/books/*" element={<BookRoutes />}></Route>
           <Route path="/users/*" element={<UserRoutes />}></Route>
           <Route path="/auth/*" element={<AuthRoutes />}></Route>
-          <Route path='/' element={<HomeRoutes/>}></Route>
+          <Route path="/" element={<HomeRoutes />}></Route>
+
+          <Route path="/not-found" element={<NotFound />} />
+
+          <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Routes>
       </BrowserRouter>
     </>

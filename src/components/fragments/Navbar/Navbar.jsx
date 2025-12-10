@@ -32,14 +32,34 @@
 //   )
 // }
 
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const nameItem = 'book-recommendation-token'
+  const navigate = useNavigate()
+  const token = localStorage.getItem(nameItem)
+  const isLoggedIn = !!token
+
+  // const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Сторінки, які не потребують авторизації
+    const publicPaths = ['/auth/login', '/auth/registration', '/not-found']
+
+    // Якщо користувач не авторизований і не на публічній сторінці
+    if (!isLoggedIn && !publicPaths.includes(location.pathname)) {
+      navigate('/auth/login', { replace: true })
+    }
+  }, [isLoggedIn, location.pathname, navigate])
 
   const handleAuthClick = () => {
-    setIsLoggedIn(!isLoggedIn)
+    if (isLoggedIn) {
+      localStorage.removeItem(nameItem)
+      navigate('/', { replace: true })
+    } else {
+      navigate('/auth/login', { replace: true })
+    }
   }
 
   return (
@@ -55,10 +75,7 @@ export default function Navbar() {
         <Link
           to="/"
           className="fw-bold text-decoration-none"
-          style={{
-            color: '#003d73',
-            fontSize: '1.6rem',
-          }}
+          style={{ color: '#003d73', fontSize: '1.6rem' }}
         >
           BookSense
         </Link>
@@ -72,10 +89,7 @@ export default function Navbar() {
             <Link
               to="/books/catalog"
               className="text-decoration-none"
-              style={{
-                color: '#0a5c91',
-                transition: 'color 0.2s ease',
-              }}
+              style={{ color: '#0a5c91', transition: 'color 0.2s ease' }}
               onMouseEnter={(e) => (e.target.style.color = '#00a9b7')}
               onMouseLeave={(e) => (e.target.style.color = '#0a5c91')}
             >
@@ -86,57 +100,66 @@ export default function Navbar() {
             <Link
               to="/books/search"
               className="text-decoration-none"
-              style={{
-                color: '#0a5c91',
-                transition: 'color 0.2s ease',
-              }}
+              style={{ color: '#0a5c91', transition: 'color 0.2s ease' }}
               onMouseEnter={(e) => (e.target.style.color = '#00a9b7')}
               onMouseLeave={(e) => (e.target.style.color = '#0a5c91')}
             >
               Search
             </Link>
           </li>
-          {/* <li>
-            <Link
-              to="/users"
-              className="text-decoration-none"
-              style={{
-                color: '#0a5c91',
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.target.style.color = '#00a9b7')}
-              onMouseLeave={(e) => (e.target.style.color = '#0a5c91')}
-            >
-              Users
-            </Link>
-          </li> */}
         </ul>
 
-        {/* Auth кнопка */}
-        <button
-          onClick={handleAuthClick}
-          className="border-0 text-white fw-semibold"
-          style={{
-            backgroundColor: isLoggedIn ? '#00a9b7' : '#0a5c91',
-            padding: '8px 18px',
-            borderRadius: '20px',
-            fontSize: '0.95rem',
-            boxShadow: '0 4px 8px rgba(0,100,255,0.15)',
-            transition: 'background-color 0.2s ease',
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = isLoggedIn
-              ? '#008c9a'
-              : '#0073b1')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = isLoggedIn
-              ? '#00a9b7'
-              : '#0a5c91')
-          }
-        >
-          {isLoggedIn ? 'Logout' : 'Login'}
-        </button>
+        {/* Кнопки авторизації */}
+        <div className="d-flex gap-2">
+          {isLoggedIn && (
+            <Link
+              to="/users/profile"
+              className="btn text-white fw-semibold"
+              style={{
+                backgroundColor: '#003d73',
+                padding: '8px 18px',
+                borderRadius: '20px',
+                fontSize: '0.95rem',
+                boxShadow: '0 4px 8px rgba(0,100,255,0.15)',
+                textDecoration: 'none',
+                transition: 'background-color 0.2s ease',
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = '#0073b1')
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = '#003d73')
+              }
+            >
+              Profile
+            </Link>
+          )}
+
+          <button
+            onClick={handleAuthClick}
+            className="border-0 text-white fw-semibold"
+            style={{
+              backgroundColor: isLoggedIn ? '#00a9b7' : '#0a5c91',
+              padding: '8px 18px',
+              borderRadius: '20px',
+              fontSize: '0.95rem',
+              boxShadow: '0 4px 8px rgba(0,100,255,0.15)',
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = isLoggedIn
+                ? '#008c9a'
+                : '#0073b1')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = isLoggedIn
+                ? '#00a9b7'
+                : '#0a5c91')
+            }
+          >
+            {isLoggedIn ? 'Logout' : 'Login'}
+          </button>
+        </div>
       </div>
     </nav>
   )

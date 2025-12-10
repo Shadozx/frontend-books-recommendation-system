@@ -350,114 +350,100 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../../fragments/Navbar/Navbar'
 import Footer from '../../../fragments/Footer/Footer'
+import { useAuthUser } from '../../../hooks/useAuthUser'
 
 export default function BookSearch() {
+  const authUser = useAuthUser()
+
   // const [description, setDescription] = useState('')
   const [description, setDescription] = useState(
-    'I want a book about finding calm and balance in everyday life.'
+    // 'I want a book about finding calm and balance in everyday life.'
+    ''
   )
 
-  const [books, setBooks] = useState([])
+  const [limit, setLimit] = useState(5)
 
-  // const [emotion, setEmotion] = useState(null)
-  const [emotion, setEmotion] = useState('curiosity')
-
+  const [emotion, setEmotion] = useState()
   const [showEmotions, setShowEmotions] = useState(false)
+  const [books, setBooks] = useState([])
+  const [loading, setLoading] = useState(false)
 
   const emotions = [
-    'admiration',
-    'amusement',
-    'anger',
-    'annoyance',
-    'approval',
-    'caring',
-    'confusion',
-    'curiosity',
-    'desire',
-    'disappointment',
-    'disapproval',
-    'disgust',
-    'embarrassment',
-    'excitement',
-    'fear',
-    'gratitude',
-    'grief',
-    'joy',
-    'love',
-    'nervousness',
-    'optimism',
-    'pride',
-    'realization',
-    'relief',
-    'remorse',
     'sadness',
+    'anger',
+    'love',
     'surprise',
+    'fear',
+    'happiness',
     'neutral',
+    'disgust',
+    'shame',
+    'guilt',
+    'confusion',
+    'desire',
+    'sarcasm',
   ]
-  const handleSearch = () => {
-    const mockBooks = [
-      {
-        id: 1,
-        title: 'The Power of Now',
-        authors: 'Eckhart Tolle',
-        description:
-          'A guide to living in the present moment, promoting peace and mindfulness in daily life.',
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd-2pAOkmRdvWof-zrJaf5-soLTsO-cHQ_BQ&s',
-        price: '₹299.00',
-        rating: 4.5,
-        genre: 'Self-Help',
-      },
-      {
-        id: 2,
-        title: 'Big Magic',
-        authors: 'Elizabeth Gilbert',
-        description:
-          'A calming exploration of creativity and how to live a more inspired, balanced life.',
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM_Aiwdz1B_rbAqevRxbNZf2yvOAOJ7xWLZA&s',
-        price: '₹279.00',
-        rating: 4.4,
-        genre: 'Self-Help',
-      },
-      {
-        id: 3,
-        title: 'The Little Book of Hygge',
-        authors: 'Meik Wiking',
-        description:
-          'A cozy guide to finding comfort and calm through simple, everyday pleasures.',
-        image: 'https://m.media-amazon.com/images/I/81yhIviKEnL._UF1000,1000_QL80_.jpg',
-        price: '₹249.00',
-        rating: 4.3,
-        genre: 'Self-Help',
-      },
-    ]
-    setBooks(mockBooks)
-    // const mockBooks = [
-    //   {
-    //     id: 1,
-    //     title: 'Shadows of Memory',
-    //     authors: 'Clara Nguyen',
-    //     description:
-    //       'A deeply emotional exploration of love, grief, and redemption.',
-    //     image:
-    //       'https://images-na.ssl-images-amazon.com/images/I/81eB+7+CkUL.jpg',
-    //     price: '₹249.00',
-    //     rating: 4.4,
-    //     genre: 'Drama',
-    //   },
-    //   {
-    //     id: 2,
-    //     title: 'Beyond the Horizon',
-    //     authors: 'James Holt',
-    //     description:
-    //       'Adventure, fear, and courage collide in this gripping odyssey.',
-    //     image:
-    //       'https://images-na.ssl-images-amazon.com/images/I/71tbalAHYCL.jpg',
-    //     price: '₹299.00',
-    //     rating: 4.7,
-    //     genre: 'Adventure',
-    //   },
-    // ]
-    // setBooks(mockBooks)
+
+  const handleSearchByDescription = async () => {
+    if (!description) return
+    setLoading(true)
+    try {
+      const query = new URLSearchParams({
+        query: description,
+        page: 1,
+        limit: limit,
+      })
+      const res = await fetch(
+        `http://localhost:8000/recommendations/description?${query}`
+      )
+      const data = await res.json()
+      setBooks(data)
+    } catch (err) {
+      console.error(err)
+      setBooks([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearchByEmotion = async () => {
+    if (!emotion) return
+    setLoading(true)
+    try {
+      const query = new URLSearchParams({ emotion, page: 1, limit: limit })
+      const res = await fetch(
+        `http://localhost:8000/recommendations/emotion?${query}`
+      )
+      const data = await res.json()
+      setBooks(data)
+    } catch (err) {
+      console.error(err)
+      setBooks([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOppositeBooks = async () => {
+    setLoading(true)
+    try {
+      const query = new URLSearchParams({
+        current_user_id: authUser.id,
+        limit: limit,
+      })
+      const res = await fetch(
+        `http://localhost:8000/recommendations/opposite?${query}`
+      )
+      const data = await res.json()
+      console.log(data)
+
+      setBooks(data)
+    } catch (err) {
+      console.error(err)
+      setBooks([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEmotionButton = () => {
@@ -489,21 +475,21 @@ export default function BookSearch() {
           className="text-center fw-bold mb-3"
           style={{ color: '#0a5c91', fontSize: '2.5rem' }}
         >
-          Emotional Book Discovery
+          Book Discovery
         </h1>
         <p
           className="text-center mb-5"
           style={{ color: '#5c6b74', fontSize: '1.1rem' }}
         >
-          Describe what you want to feel — and we’ll find books that match your
-          emotion
+          Describe what you want to feel — and we’ll find books that match you
         </p>
 
         {/* Пошук */}
         <div
-          className="d-flex flex-column align-items-center gap-3 mb-5"
+          className="d-flex flex-column align-items-center gap-4 mb-5"
           style={{ width: '100%' }}
         >
+          {/* TEXTAREA */}
           <textarea
             className="shadow-sm"
             placeholder="Describe the book you’re looking for..."
@@ -521,14 +507,28 @@ export default function BookSearch() {
               fontSize: '1rem',
               resize: 'none',
             }}
-            onFocus={(e) =>
-              (e.target.style.boxShadow = '0 0 12px rgba(0,150,255,0.25)')
-            }
-            onBlur={(e) => (e.target.style.boxShadow = 'none')}
           />
 
-          <div className="d-flex gap-3 flex-wrap">
-            {/* Emotion Dropdown Button */}
+          {/* --- ROW 1 --- */}
+          <div className="d-flex gap-3 flex-wrap justify-content-center w-100">
+            {/* BOOK LIMIT SELECT */}
+            <select
+              className="form-select shadow-sm"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              style={{
+                width: '160px',
+                borderRadius: '10px',
+                border: '1px solid #d0e7f3',
+                color: '#0a5c91',
+              }}
+            >
+              <option value="5">5 books</option>
+              <option value="10">10 books</option>
+              <option value="15">15 books</option>
+            </select>
+
+            {/* EMOTION SELECT BUTTON */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={handleEmotionButton}
@@ -540,7 +540,6 @@ export default function BookSearch() {
                   fontWeight: '500',
                   backgroundColor: emotion ? '#00a9b7' : '#ffffff',
                   color: emotion ? '#ffffff' : '#0a5c91',
-                  transition: 'all 0.3s ease',
                 }}
               >
                 {emotion ? emotion : 'Select Emotion'}
@@ -569,7 +568,6 @@ export default function BookSearch() {
                         padding: '10px 16px',
                         color: '#0a5c91',
                         cursor: 'pointer',
-                        transition: 'background-color 0.2s',
                       }}
                       onMouseEnter={(el) =>
                         (el.currentTarget.style.backgroundColor = '#f0f8fb')
@@ -586,28 +584,49 @@ export default function BookSearch() {
             </div>
           </div>
 
-          {/* Search button */}
-          <button
-            onClick={handleSearch}
-            disabled={!description || !emotion}
-            className="btn text-white rounded-pill px-5 py-2 shadow-sm"
-            style={{
-              backgroundColor: !description || !emotion ? '#a0c6d4' : '#00a9b7',
-              fontWeight: '500',
-              fontSize: '1rem',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={(e) => {
-              if (description && emotion)
-                e.currentTarget.style.backgroundColor = '#008c9a'
-            }}
-            onMouseLeave={(e) => {
-              if (description && emotion)
-                e.currentTarget.style.backgroundColor = '#00a9b7'
-            }}
-          >
-            Search Books
-          </button>
+          {/* --- ROW 2 --- */}
+          <div className="d-flex gap-3 flex-wrap justify-content-center w-100">
+            {/* SEARCH BY DESCRIPTION */}
+            <button
+              onClick={handleSearchByDescription}
+              disabled={!description}
+              className="btn text-white rounded-pill px-4 py-2 shadow-sm"
+              style={{
+                backgroundColor: !description ? '#a0c6d4' : '#00a9b7',
+                fontWeight: '500',
+                fontSize: '1rem',
+              }}
+            >
+              Search by Description
+            </button>
+
+            {/* SEARCH BY EMOTION */}
+            <button
+              onClick={handleSearchByEmotion}
+              disabled={!emotion}
+              className="btn text-white rounded-pill px-4 py-2 shadow-sm"
+              style={{
+                backgroundColor: !emotion ? '#a0c6d4' : '#00a9b7',
+                fontWeight: '500',
+                fontSize: '1rem',
+              }}
+            >
+              Search by Emotion
+            </button>
+
+            {/* OPPOSITE */}
+            <button
+              onClick={handleOppositeBooks}
+              className="btn text-white rounded-pill px-4 py-2 shadow-sm"
+              style={{
+                backgroundColor: '#ff6b6b',
+                fontWeight: '500',
+                fontSize: '1rem',
+              }}
+            >
+              Opposite Books
+            </button>
+          </div>
         </div>
 
         {/* Результати */}
@@ -682,10 +701,13 @@ export default function BookSearch() {
                           flexGrow: 1,
                         }}
                       >
-                        {book.description}
+                        {' '}
+                        {book.description.length > 100
+                          ? book.description.substring(0, 100) + '…'
+                          : book.description}
                       </p>
 
-                      {book.rating ? (
+                      {/* {book.rating ? (
                         <p
                           style={{
                             color: '#ffb400',
@@ -699,7 +721,7 @@ export default function BookSearch() {
                         <p style={{ color: '#a0a0a0', fontSize: '0.9rem' }}>
                           (N/A)
                         </p>
-                      )}
+                      )} */}
 
                       <div className="mt-auto d-flex justify-content-between align-items-center">
                         {/* <span
