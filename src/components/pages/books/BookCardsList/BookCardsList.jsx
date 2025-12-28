@@ -15,6 +15,8 @@ export default function BookCardList() {
   const [totalPages, setTotalPages] = useState(1)
   const limit = 12
 
+  document.title = 'Catalog'
+
   // Завантаження категорій
   useEffect(() => {
     fetch('http://localhost:8000/categories')

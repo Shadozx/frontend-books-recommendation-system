@@ -14,6 +14,8 @@ export default function UserProfile() {
   const [editedText, setEditedText] = useState('')
   const [editedScore, setEditedScore] = useState(5)
 
+  document.title = 'User profile'
+
   // Завантаження відгуків авторизованого користувача
   useEffect(() => {
     if (!authUser?.id) return
@@ -25,7 +27,33 @@ export default function UserProfile() {
         )
         if (!res.ok) throw new Error('Reviews not found')
 
-        setReviews(await res.json())
+        const revData = await res.json()
+
+        let revWithBook = await Promise.all(
+          revData.map(async (r) => {
+            const bookRes = await fetch(
+              `http://localhost:8000/books/${r.book_id}`
+            )
+
+            if (!bookRes.ok) throw new Error('Book not found')
+
+            const bookData = await bookRes.json()
+
+            return {
+              ...r,
+              title: bookData.title,
+            }
+          })
+        )
+
+        console.log(revWithBook)
+
+        revWithBook = revWithBook.sort(
+          (a, b) => new Date(b.time) - new Date(a.time)
+        )
+        console.log(revWithBook)
+
+        setReviews(revWithBook)
       } catch (e) {
         console.error(e)
       } finally {
@@ -35,6 +63,13 @@ export default function UserProfile() {
 
     fetchReviews()
   }, [authUser])
+
+  const handleChange = (e) => {
+    const el = textareaRef.current
+    el.style.height = 'auto' // скидаємо висоту
+    el.style.height = el.scrollHeight + 'px' // встановлюємо потрібну
+    setEditedText(e.target.value)
+  }
 
   // --- Save edited review ---
   const handleSaveEdit = async (reviewId) => {
@@ -54,11 +89,36 @@ export default function UserProfile() {
       if (!res.ok) throw new Error('Failed to update review')
 
       // Update local state
-      const updatedReviews = reviews.map((r) =>
-        r.id === reviewId ? { ...r, text: editedText, score: editedScore } : r
-      )
+      const updatedReviews = reviews
+        .map((r) =>
+          r.id === reviewId
+            ? {
+                ...r,
+                text: editedText,
+                score: editedScore,
+                summary: editedSummary,
+              }
+            : r
+        )
+        .sort((a, b) => new Date(b.time) - new Date(a.time))
       setReviews(updatedReviews)
       setEditingReviewId(null)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/reviews/${reviewId}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) throw new Error('Failed to delete review')
+
+      // Оновлення локального стану
+      const updatedReviews = reviews.filter((r) => r.id !== reviewId)
+      setReviews(updatedReviews)
     } catch (e) {
       console.error(e)
     }
@@ -145,36 +205,68 @@ export default function UserProfile() {
                       className="fw-semibold mb-1"
                       style={{ color: '#003d73' }}
                     >
-                      {review.title}
+                      <a
+                        href={'/books/' + review.book_id}
+                        style={{ color: '#003d73', textDecoration: 'none' }}
+                      >
+                        {review.title}
+                      </a>
                     </h5>
 
                     {editingReviewId === review.id ? (
                       <>
-                        <textarea
-                          className="form-control mb-2"
-                          style={{ width: '100%', resize: 'vertical' }}
-                          rows="5"
-                          value={editedSummary}
-                          onChange={(e) => setEditedSummary(e.target.value)}
-                        />
-                        <textarea
-                          className="form-control mb-2"
-                          style={{ width: '100%', resize: 'vertical' }}
-                          rows="5"
-                          value={editedText}
-                          onChange={(e) => setEditedText(e.target.value)}
-                        />
-                        <input
-                          type="number"
-                          className="form-control mb-2"
-                          style={{ width: '100%' }}
-                          min="1"
-                          max="5"
-                          value={editedScore}
-                          onChange={(e) =>
-                            setEditedScore(Number(e.target.value))
-                          }
-                        />
+                        <div className="mb-3">
+                          <label
+                            className="form-label fw-semibold"
+                            style={{ color: '#0a5c91' }}
+                          >
+                            Summary
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editedSummary}
+                            onChange={(e) => setEditedSummary(e.target.value)}
+                            style={{ borderRadius: '10px' }}
+                          />
+                        </div>
+
+                        <div className="mb-3">
+                          <label
+                            className="form-label fw-semibold"
+                            style={{ color: '#0a5c91' }}
+                          >
+                            Review text
+                          </label>
+                          <textarea
+                            className="form-control"
+                            rows="4"
+                            value={editedText}
+                            onChange={(e) => {
+                              setEditedText(e.target.value)
+                              handleChange(e)
+                            }}
+                            style={{ borderRadius: '10px' }}
+                          ></textarea>
+                        </div>
+
+                        <div className="mb-3">
+                          <label
+                            className="form-label fw-semibold"
+                            style={{ color: '#0a5c91' }}
+                          >
+                            Rating (1–5)
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            min="1"
+                            max="5"
+                            value={editedScore}
+                            onChange={(e) => setEditedScore(e.target.value)}
+                            style={{ borderRadius: '10px' }}
+                          />
+                        </div>
                         <div className="d-flex gap-2">
                           <button
                             className="border-0 text-white fw-semibold"
@@ -189,6 +281,17 @@ export default function UserProfile() {
                             onClick={() => handleSaveEdit(review.id)}
                           >
                             Save Changes
+                          </button>
+                          <button
+                            className="btn text-white rounded-pill px-4 py-2 shadow-sm"
+                            style={{
+                              backgroundColor: '#ff6b6b',
+                              fontWeight: '500',
+                              fontSize: '1rem',
+                            }}
+                            onClick={() => handleDeleteReview(review.id)}
+                          >
+                            Delete
                           </button>
                           <button
                             className="btn btn-secondary btn-sm"
@@ -221,7 +324,9 @@ export default function UserProfile() {
                             lineHeight: '1.6',
                           }}
                         >
-                          {review.text}
+                          {review?.text?.length > 250
+                            ? review.text.substring(0, 250) + '…'
+                            : review.text}
                         </p>
                         <div className="mt-3 d-flex flex-column gap-1">
                           <p

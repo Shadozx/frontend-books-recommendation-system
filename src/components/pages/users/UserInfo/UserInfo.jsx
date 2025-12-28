@@ -135,6 +135,8 @@ export default function UserInfo() {
 
   const [recommendations, setRecommendations] = useState([])
 
+  document.title = 'User info'
+
   useEffect(() => {
     const fetchUser = async () => {
       const res = await fetch(`http://localhost:8000/users/${id}`)
@@ -252,99 +254,6 @@ export default function UserInfo() {
           </div>
         </div>
 
-        {/* Рецензії користувача */}
-        <div className="container mb-5" style={{ maxWidth: '1100px' }}>
-          <h3
-            className="fw-bold mb-4"
-            style={{ color: '#0a5c91', fontSize: '1.8rem' }}
-          >
-            User Reviews
-          </h3>
-
-          {reviews?.length > 0 ? (
-            <div className="row g-4">
-              {reviews.map((review) => (
-                <div key={review.id} className="col-md-6">
-                  <div
-                    className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #d0e7f3',
-                    }}
-                  >
-                    <h5
-                      className="fw-semibold mb-1"
-                      style={{ color: '#003d73' }}
-                    >
-                      {review.title}
-                    </h5>
-                    <p
-                      className="mb-2"
-                      style={{ color: '#0a5c91', fontWeight: 500 }}
-                    >
-                      {review.summary}
-                    </p>
-                    <p
-                      className="flex-grow-1"
-                      style={{
-                        color: '#0a5c91',
-                        fontSize: '0.95rem',
-                        lineHeight: '1.6',
-                      }}
-                    >
-                      {review.text}
-                    </p>
-
-                    <div className="mt-3">
-                      <p
-                        style={{
-                          color: '#ffb400',
-                          fontWeight: '500',
-                          fontSize: '0.9rem',
-                          marginBottom: '0.2rem',
-                        }}
-                      >
-                        ⭐ {review.score}/5
-                      </p>
-                      {/* <p
-                        style={{
-                          color: '#0a5c91',
-                          fontSize: '0.9rem',
-                          marginBottom: '0.2rem',
-                        }}
-                      >
-                        Helpfulness: {review.helpfulness}
-                      </p> */}
-                      <p
-                        style={{
-                          color: '#0a5c91',
-                          fontSize: '0.9rem',
-                          marginBottom: '0.2rem',
-                        }}
-                      >
-                        Reviewed on: {review.time}
-                      </p>
-                      {/* <p
-                        style={{
-                          color: '#0047ab',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        {review.price}
-                      </p> */}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center" style={{ color: '#0a5c91' }}>
-              No reviews yet.
-            </p>
-          )}
-        </div>
-
         {/* Рекомендації користувачу */}
         <div className="container mb-5" style={{ maxWidth: '1100px' }}>
           <h3
@@ -434,6 +343,101 @@ export default function UserInfo() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Рецензії користувача */}
+        <div className="container mb-5" style={{ maxWidth: '1100px' }}>
+          <h3
+            className="fw-bold mb-4"
+            style={{ color: '#0a5c91', fontSize: '1.8rem' }}
+          >
+            User Reviews
+          </h3>
+
+          {reviews?.length > 0 ? (
+            <div className="row g-4">
+              {reviews.map((review) => (
+                <div key={review.id} className="col-md-6">
+                  <div
+                    className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #d0e7f3',
+                    }}
+                  >
+                    <h5
+                      className="fw-semibold mb-1"
+                      style={{ color: '#003d73' }}
+                    >
+                      {review.title}
+                    </h5>
+                    <p
+                      className="mb-2"
+                      style={{ color: '#0a5c91', fontWeight: 500 }}
+                    >
+                      {review.summary}
+                    </p>
+                    <p
+                      className="flex-grow-1"
+                      style={{
+                        color: '#0a5c91',
+                        fontSize: '0.95rem',
+                        lineHeight: '1.6',
+                      }}
+                    >
+                      {review?.text?.length > 250
+                        ? review.text.substring(0, 250) + '…'
+                        : review.text}
+                    </p>
+
+                    <div className="mt-3">
+                      <p
+                        style={{
+                          color: '#ffb400',
+                          fontWeight: '500',
+                          fontSize: '0.9rem',
+                          marginBottom: '0.2rem',
+                        }}
+                      >
+                        ⭐ {review.score}/5
+                      </p>
+                      {/* <p
+                        style={{
+                          color: '#0a5c91',
+                          fontSize: '0.9rem',
+                          marginBottom: '0.2rem',
+                        }}
+                      >
+                        Helpfulness: {review.helpfulness}
+                      </p> */}
+                      <p
+                        style={{
+                          color: '#0a5c91',
+                          fontSize: '0.9rem',
+                          marginBottom: '0.2rem',
+                        }}
+                      >
+                        Reviewed on: {review.time}
+                      </p>
+                      {/* <p
+                        style={{
+                          color: '#0047ab',
+                          fontWeight: '600',
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        {review.price}
+                      </p> */}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center" style={{ color: '#0a5c91' }}>
+              No reviews yet.
+            </p>
+          )}
         </div>
       </div>
       <Footer />

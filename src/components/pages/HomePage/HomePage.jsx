@@ -4,6 +4,8 @@ import Footer from '../../fragments/Footer/Footer'
 // import Navbar from '../../../fragments/Navbar/Navbar'
 
 export default function HomePage() {
+
+  document.title = 'Home page'
   return (
     <>
       <Navbar />

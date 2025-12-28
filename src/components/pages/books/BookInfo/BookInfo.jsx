@@ -18,8 +18,6 @@ export default function BookInfo() {
   const authUser = useAuthUser()
   console.log(authUser)
 
-  const token = localStorage.getItem('book-recommendation-token')
-
   const [showForm, setShowForm] = useState(false)
   const [newReview, setNewReview] = useState({
     summary: '',
@@ -27,6 +25,8 @@ export default function BookInfo() {
     score: 5,
     user_id: authUser?.id, // тимчасово, поки не буде юзерів
   })
+
+  document.title = 'Book info'
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -228,17 +228,19 @@ export default function BookInfo() {
               >
                 {book.description}
               </p>
-              {/* {book.avg_rating && (
+              {book.rating ? (
                 <p
                   style={{
                     color: '#ffb400',
                     fontWeight: '500',
-                    fontSize: '1rem',
+                    fontSize: '0.9rem',
                   }}
                 >
-                  ⭐ {book.avg_rating} / 5
+                  ⭐ {book.rating.toFixed(1)}
                 </p>
-              )} */}
+              ) : (
+                <p style={{ color: '#a0a0a0', fontSize: '0.9rem' }}>(N/A)</p>
+              )}
             </div>
           </div>
         </div>
